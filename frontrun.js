@@ -1,5 +1,5 @@
 /**
- * Perform a front-running attack on uniswap
+ * Perform a front-running attack on PULSEX
  */
 const fs = require('fs');
 var Web3 = require("web3");
@@ -11,11 +11,11 @@ var BigNumber = require("big-number");
 const ERC20ABI = require("./abi/ERC20.json");
 
 const {
-  UNISWAP_ROUTER_ADDRESS,
-  UNISWAP_FACTORY_ADDRESS,
-  UNISWAP_ROUTER_ABI,
-  UNISWAP_FACTORY_ABI,
-  UNISWAP_POOL_ABI,
+  PULSEX_ROUTER_ADDRESS,
+  PULSEX_FACTORY_ADDRESS,
+  PULSEX_ROUTER_ABI,
+  PULSEX_FACTORY_ABI,
+  PULSEX_POOL_ABI,
   HTTP_PROVIDER_LINK,
   WEBSOCKET_PROVIDER_LINK,
   HTTP_PROVIDER_LINK_TEST,
@@ -35,8 +35,8 @@ var gas_price_info;
 
 var web3;
 var web3Ws;
-var uniswapRouter;
-var uniswapFactory;
+var PULSEXRouter;
+var PULSEXFactory;
 var USER_WALLET;
 var native_info;
 
@@ -61,15 +61,15 @@ async function createWeb3() {
     web3Ws = new Web3(
       new Web3.providers.WebsocketProvider(WEBSOCKET_PROVIDER_LINK)
     );
-    uniswapRouter = new web3.eth.Contract(
-      UNISWAP_ROUTER_ABI,
-      UNISWAP_ROUTER_ADDRESS
+    PULSEXRouter = new web3.eth.Contract(
+      PULSEX_ROUTER_ABI,
+      PULSEX_ROUTER_ADDRESS
     );
-    uniswapFactory = new web3.eth.Contract(
-      UNISWAP_FACTORY_ABI,
-      UNISWAP_FACTORY_ADDRESS
+    PULSEXFactory = new web3.eth.Contract(
+      PULSEX_FACTORY_ABI,
+      PULSEX_FACTORY_ADDRESS
     );
-    abiDecoder.addABI(UNISWAP_ROUTER_ABI);
+    abiDecoder.addABI(PULSEX_ROUTER_ABI);
 
     return true;
   } 
@@ -95,7 +95,7 @@ async function loop(){
         let transaction = await web3.eth.getTransaction(transactionHash);
         if (
           transaction != null &&
-          transaction["to"] && transaction["to"].toString().toLowerCase() == UNISWAP_ROUTER_ADDRESS.toString().toLowerCase()
+          transaction["to"] && transaction["to"].toString().toLowerCase() == PULSEX_ROUTER_ADDRESS.toString().toLowerCase()
         ) {
           await handleTransaction(
             transaction,
@@ -235,7 +235,7 @@ async function handleTransaction(
 async function approve(gasPrice, token_address) {
   try {
     var allowance = await out_token_info.token_contract.methods
-      .allowance(USER_WALLET.address, UNISWAP_ROUTER_ADDRESS)
+      .allowance(USER_WALLET.address, PULSEX_ROUTER_ADDRESS)
       .call();
 
     allowance = BigNumber(Math.floor(Number(allowance)).toString());
@@ -252,7 +252,7 @@ async function approve(gasPrice, token_address) {
         gas: 50000,
         gasPrice: gasPrice * ONE_GWEI,
         data: out_token_info.token_contract.methods
-          .approve(UNISWAP_ROUTER_ADDRESS, max_allowance)
+          .approve(PULSEX_ROUTER_ADDRESS, max_allowance)
           .encodeABI(),
       };
 
@@ -298,7 +298,7 @@ async function triggersFrontRun(transaction, out_token_address, amount, level) {
 
     if (attack_started) return false;
 
-    if (transaction["to"] && transaction["to"].toString().toLowerCase() != UNISWAP_ROUTER_ADDRESS.toString().toLowerCase()) {
+    if (transaction["to"] && transaction["to"].toString().toLowerCase() != PULSEX_ROUTER_ADDRESS.toString().toLowerCase()) {
       return false;
     }
     
@@ -390,7 +390,7 @@ async function swap(
 
     if (trade == 0) {
       //buy
-      swapTransaction = uniswapRouter.methods.swapExactETHForTokens(
+      swapTransaction = PULSEXRouter.methods.swapExactETHForTokens(
         "0",
         [WETH_TOKEN_ADDRESS, out_token_address],
         from.address,
@@ -414,7 +414,7 @@ async function swap(
       //sell
       console.log("swapExactTokensForETH");
 
-      swapTransaction = uniswapRouter.methods.swapExactTokensForETH(
+      swapTransaction = PULSEXRouter.methods.swapExactTokensForETH(
         realInput.toString(),
         "0",
         [out_token_address, WETH_TOKEN_ADDRESS],
@@ -545,14 +545,14 @@ async function getPoolInfo(in_token_address, out_token_address, level) {
   if(!attack_started) console.log(log_str.green);
 
   try {
-    var pool_address = await uniswapFactory.methods
+    var pool_address = await PULSEXFactory.methods
       .getPair(in_token_address, out_token_address)
       .call();
     
       console.log(pool_address);
     if (pool_address == "0x0000000000000000000000000000000000000000") {
       log_str =
-        "Uniswap has no " +
+        "PULSEX has no " +
         out_token_info.symbol +
         "-" +
         input_token_info.symbol +
@@ -564,7 +564,7 @@ async function getPoolInfo(in_token_address, out_token_address, level) {
     var log_str = "Address:\t" + pool_address;
     if(!attack_started) console.log(log_str.white);
 
-    var pool_contract = new web3.eth.Contract(UNISWAP_POOL_ABI, pool_address);
+    var pool_contract = new web3.eth.Contract(PULSEX_POOL_ABI, pool_address);
     var reserves = await pool_contract.methods.getReserves().call();
 
     var token0_address = await pool_contract.methods.token0().call();
@@ -737,7 +737,7 @@ async function preparedAttack() {
       (pool_info.attack_volumn / 10 ** input_token_info.decimals).toFixed(5) +
       " " +
       input_token_info.symbol +
-      "  Exchange on Uniswap *****";
+      "  Exchange on PULSEX *****";
     if(!attack_started) console.log(log_str.green);
 
     setTimeout(() => {

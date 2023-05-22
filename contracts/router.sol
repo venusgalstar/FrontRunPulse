@@ -304,7 +304,7 @@ library PulseXLibrary {
 }
 
 
-// File @uniswap/lib/contracts/libraries/TransferHelper.sol@v4.0.1-alpha
+// File @PULSEX/lib/contracts/libraries/TransferHelper.sol@v4.0.1-alpha
 
 // SPDX-License-Identifier: GPL-3.0-or-later
 

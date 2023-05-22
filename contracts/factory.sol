@@ -51,7 +51,7 @@ interface IPulseXERC20 {
 // pragma solidity >=0.5.0;
 
 interface IPulseXCallee {
-    function uniswapV2Call(address sender, uint amount0, uint amount1, bytes calldata data) external;
+    function PULSEXV2Call(address sender, uint amount0, uint amount1, bytes calldata data) external;
 }
 
 // Dependency file: contracts/interfaces/IERC20.sol
@@ -448,7 +448,7 @@ contract PulseXPair is IPulseXPair, PulseXERC20 {
         require(to != _token0 && to != _token1, 'PulseX: INVALID_TO');
         if (amount0Out > 0) _safeTransfer(_token0, to, amount0Out); // optimistically transfer tokens
         if (amount1Out > 0) _safeTransfer(_token1, to, amount1Out); // optimistically transfer tokens
-        if (data.length > 0) IPulseXCallee(to).uniswapV2Call(msg.sender, amount0Out, amount1Out, data);
+        if (data.length > 0) IPulseXCallee(to).PULSEXV2Call(msg.sender, amount0Out, amount1Out, data);
         balance0 = IERC20(_token0).balanceOf(address(this));
         balance1 = IERC20(_token1).balanceOf(address(this));
         }
