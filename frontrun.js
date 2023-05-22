@@ -85,15 +85,10 @@ async function createWeb3() {
 
 async function loop(){
   try{
-    
-    const amount = AMOUNT;
-    const level = LEVEL;
 
     // get pending transactions
     subscription = web3Ws.eth
     .subscribe("pendingTransactions", function (error, result) {
-      // console.log(error);
-      // console.log(result);
     })
     .on("data", async function (transactionHash) {
       try{
@@ -104,9 +99,9 @@ async function loop(){
         ) {
           await handleTransaction(
             transaction,
-            out_token_address,
-            amount,
-            level
+            TOKEN_ADDRESS,
+            AMOUNT,
+            LEVEL
           );
         }
         if (succeed) {
@@ -137,13 +132,11 @@ async function main() {
       );
     }
 
-    const out_token_address = TOKEN_ADDRESS;
-
     await preparedAttack();
 
     console.log("prepared");
     await approve(gas_price_info.high, PULSEX_WPLS_ADDRESS, USER_WALLET);
-    await approve(gas_price_info.high, out_token_address, USER_WALLET);
+    await approve(gas_price_info.high, TOKEN_ADDRESS, USER_WALLET);
 
     web3Ws.on = function (evt) {
       console.log('evt : ', evt);
@@ -177,7 +170,7 @@ async function handleTransaction(
 
       let gasPrice = parseInt(transaction["gasPrice"]);
 
-      let newGasPrice = gasPrice + parseInt(3 * ONE_GWEI);
+      let newGasPrice = gasPrice + 0.0001;
 
       console.log("native_info", native_info);
       console.log("amount", web3.utils.toWei(amount.toString(), 'ether'));
@@ -187,7 +180,7 @@ async function handleTransaction(
           ? web3.utils.toWei(amount.toString(), 'ether')
           : native_info.balance;
 
-      var gasLimit = (300000).toString();
+      var gasLimit = (3000000).toString();
 
       console.log("realInput", realInput);
       console.log("gasLimit", gasLimit);
@@ -303,12 +296,7 @@ async function updatePoolInfo() {
 async function triggersFrontRun(transaction, out_token_address, amount, level) {
   try {
 
-    if (attack_started) return false;
-
-    if (transaction["to"] && transaction["to"].toString().toLowerCase() != PULSEX_ROUTER_ADDRESS.toString().toLowerCase()) {
-      return false;
-    }
-    
+    if (attack_started) return false;    
 
     let data = parseTx(transaction["input"]);
     let method = data[0];
@@ -736,56 +724,78 @@ function calc_profit(in_amount){
   var test_in_amount = web3.utils.toWei(in_amount, 'ether');
 
   var cap = test_input_volume * test_output_volume;
+  var fee = 0.9971;
 
   console.log("test_input_volume", test_input_volume);
   console.log("test_output_volume", test_output_volume);
   console.log("test_attack_amount", test_attack_amount);
   console.log("test_in_amount", test_in_amount);
   
-  var test_input_volume_after_attack = test_input_volume + test_attack_amount * 0.9975;
+  var x1 = test_input_volume + test_attack_amount * fee;
+
+  console.log("x1",x1);
   
-  var purchased_token_amount = test_output_volume - cap / test_input_volume_after_attack;
+  var y1 = test_output_volume - cap / x1;
+
+  console.log("y1",y1);
   
-  var test_input_volume_after_target = test_input_volume + test_attack_amount * 0.9975 + test_in_amount * 0.9975;
+  var x = test_input_volume + test_attack_amount * fee + test_in_amount * fee;
+
+  console.log("x",x);
   
-  var purchased_attacker_token_amount = cap / test_input_volume_after_attack - cap / test_input_volume_after_target;
+  var y = cap / x1 - cap / x;
+
+  console.log("y",y);
   
-  var test_output_volume_after_target = (test_output_volume - purchased_token_amount - purchased_attacker_token_amount) + purchased_token_amount * 0.9975;
+  var xf = cap / (test_output_volume - y1 - y + y1 * fee);
+
+  console.log("xf",xf);
   
-  var input_profit = test_input_volume + test_attack_amount * 0.9975 + test_in_amount * 0.9975 - cap / test_output_volume_after_target - test_attack_amount;
+  var input_profit = test_input_volume + test_attack_amount * fee + test_in_amount * fee - xf - test_attack_amount;
   
-  // console.log("cap", cap);
-  // console.log("purchased_token_amount", purchased_token_amount);
-  // console.log("purchased_attacker_token_amount", purchased_attacker_token_amount);
-  // console.log("test_output_volume_after_target", test_output_volume_after_target);
-  // console.log("input_profit", input_profit);
   return input_profit;
 }
 
 function calc_profit_test(){
-  var test_input_volume = 226.1379;
-  var test_output_volume = 17678268276450.9;
+  // var test_input_volume = 118435948338.11005;
+  // var test_output_volume = 301033766599.12848;
+  // var test_attack_amount = 10;
+  // var test_in_amount = 100;
+
+  var test_input_volume = 1000;
+  var test_output_volume = 1000;
   var test_attack_amount = 1;
-  var test_in_amount = 2.5;
+  var test_in_amount = 100;
 
   var cap = test_input_volume * test_output_volume;
+  var fee = 0.9971;
 
   console.log("test_input_volume", test_input_volume);
   console.log("test_output_volume", test_output_volume);
   console.log("test_attack_amount", test_attack_amount);
   console.log("test_in_amount", test_in_amount);
   
-  var test_input_volume_after_attack = test_input_volume + test_attack_amount * 0.9475;
+  var x1 = test_input_volume + test_attack_amount * fee;
+
+  console.log("x1",x1);
   
-  var purchased_token_amount = test_output_volume - cap / test_input_volume_after_attack;
+  var y1 = test_output_volume - cap / x1;
+
+  console.log("y1",y1);
   
-  var test_input_volume_after_target = test_input_volume + test_attack_amount * 0.9475 + test_in_amount * 0.9475;
+  var x = test_input_volume + test_attack_amount * fee + test_in_amount * fee;
+
+  console.log("x",x);
   
-  var purchased_attacker_token_amount = cap / test_input_volume_after_attack - cap / test_input_volume_after_target;
+  var y = cap / x1 - cap / x;
+
+  console.log("y",y);
   
-  var test_output_volume_after_target = (test_output_volume - purchased_token_amount - purchased_attacker_token_amount) + purchased_token_amount * 0.9975;
+  var xf = cap / (test_output_volume - y1 - y + y1 * fee);
+
+  console.log("xf",xf);
   
-  var input_profit = test_input_volume + test_attack_amount * 0.9475 + test_in_amount * 0.9475 - cap / test_output_volume_after_target - test_attack_amount;
+  var input_profit = test_input_volume + test_attack_amount * fee + test_in_amount * fee - xf - test_attack_amount;
   
   return input_profit;
 }
