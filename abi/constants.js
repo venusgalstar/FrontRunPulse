@@ -1177,11 +1177,9 @@ const PULSEX_ROUTER_ABI = [
 // Preconfigured for Etherum and PULSEX
 
 // To use with PULSEX use infura endpoint and configure PULSEX ABIs above. 
-const HTTP_PROVIDER_LINK = "https://rpc.cryptosnowprince.com/rpc56/";
-/// "https://eth-mainnet.nodereal.io/v1/7948185aab894850ba9c624f646015ff"; //nodereal.io
+const HTTP_PROVIDER_LINK = "https://rpc.v4.testnet.pulsechain.com";
 
-const WEBSOCKET_PROVIDER_LINK = "ws://rpc.cryptosnowprince.com:8020";
-/// "https://eth-goerli.nodereal.io/v1/7948185aab894850ba9c624f646015ff"; //nodereal.io
+const WEBSOCKET_PROVIDER_LINK = "wss://rpc.v4.testnet.pulsechain.com";
 
 const GAS_STATION = 'https://api.debank.com/chain/gas_price_dict_v2?chain=bsc'
 
@@ -1194,6 +1192,8 @@ module.exports = {
     PULSEX_ROUTER_ABI,
     PULSEX_FACTORY_ABI,
     PULSEX_POOL_ABI,
+
+    PULSEX_WPLS_ADDRESS,
 
     HTTP_PROVIDER_LINK,
     WEBSOCKET_PROVIDER_LINK,

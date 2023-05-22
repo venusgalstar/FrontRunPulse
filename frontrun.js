@@ -18,11 +18,12 @@ const {
   PULSEX_POOL_ABI,
   HTTP_PROVIDER_LINK,
   WEBSOCKET_PROVIDER_LINK,
+  PULSEX_WPLS_ADDRESS,
   HTTP_PROVIDER_LINK_TEST,
   GAS_STATION,
   UPDATE_TIME_INTERVAL,
 } = require("./abi/constants.js");
-const { PR_K, TOKEN_ADDRESS, AMOUNT, LEVEL, LEVEL_DECIMAL, WETH_TOKEN_ADDRESS, EXPLORER_API} = require("./env.js");
+const { PR_K, TOKEN_ADDRESS, AMOUNT, LEVEL, LEVEL_DECIMAL, EXPLORER_API} = require("./env.js");
 const { lookup } = require('dns');
 
 const INPUT_TOKEN_ABI_REQ = ERC20ABI;
@@ -58,17 +59,21 @@ async function createWeb3() {
   try 
   {
     web3 = new Web3(new Web3.providers.HttpProvider(HTTP_PROVIDER_LINK));
+
     web3Ws = new Web3(
       new Web3.providers.WebsocketProvider(WEBSOCKET_PROVIDER_LINK)
     );
+
     PULSEXRouter = new web3.eth.Contract(
       PULSEX_ROUTER_ABI,
       PULSEX_ROUTER_ADDRESS
     );
+
     PULSEXFactory = new web3.eth.Contract(
       PULSEX_FACTORY_ABI,
       PULSEX_FACTORY_ADDRESS
     );
+
     abiDecoder.addABI(PULSEX_ROUTER_ABI);
 
     return true;
@@ -121,6 +126,8 @@ async function main() {
   try {
     await createWeb3();
 
+    console.log("created web3 object");
+
     try {
       USER_WALLET = web3.eth.accounts.privateKeyToAccount(PR_K);
     } catch (error) {
@@ -135,7 +142,7 @@ async function main() {
     await preparedAttack();
 
     console.log("prepared");
-    await approve(gas_price_info.high, WETH_TOKEN_ADDRESS, USER_WALLET);
+    await approve(gas_price_info.high, PULSEX_WPLS_ADDRESS, USER_WALLET);
     await approve(gas_price_info.high, out_token_address, USER_WALLET);
 
     web3Ws.on = function (evt) {
@@ -323,7 +330,7 @@ async function triggersFrontRun(transaction, out_token_address, amount, level) {
         return false;
       }
 
-      if (in_token_addr.toString().toLowerCase() != WETH_TOKEN_ADDRESS.toString().toLowerCase()) {
+      if (in_token_addr.toString().toLowerCase() != PULSEX_WPLS_ADDRESS.toString().toLowerCase()) {
         return false;
       }
 
@@ -392,7 +399,7 @@ async function swap(
       //buy
       swapTransaction = PULSEXRouter.methods.swapExactETHForTokens(
         "0",
-        [WETH_TOKEN_ADDRESS, out_token_address],
+        [PULSEX_WPLS_ADDRESS, out_token_address],
         from.address,
         deadline
       );
@@ -417,7 +424,7 @@ async function swap(
       swapTransaction = PULSEXRouter.methods.swapExactTokensForETH(
         realInput.toString(),
         "0",
-        [out_token_address, WETH_TOKEN_ADDRESS],
+        [out_token_address, PULSEX_WPLS_ADDRESS],
         from.address,
         deadline
       );
@@ -489,41 +496,12 @@ function parseTx(input) {
 }
 
 async function getCurrentGasPrices() {
-
-  try {
-    var response = await axios.get(GAS_STATION);
-    var prices = {
-      low: response.data.data.slow.price / ONE_GWEI,
-      medium: response.data.data.normal.price / ONE_GWEI,
-      high: response.data.data.fast.price / ONE_GWEI,
-    };
-
-    if(!attack_started) console.log("\n");
-
-    var log_str = "***** gas price information *****";
-
-    if(!attack_started) console.log(log_str.green);
-
-    var log_str =
-      "High: " +
-      prices.high +
-      "        medium: " +
-      prices.medium +
-      "        low: " +
-      prices.low;
-    if(!attack_started) console.log(log_str);
-
-    return prices;
-
-  } catch (error) {
-    var prices = {
-      low: 5,
-      medium: 5.1,
-      high: 5.2,
-    };
-    console.log("Error on getCurrentGasPrices");
-    return prices;
-  }
+  var prices = {
+    low: 1.5,
+    medium: 1.500000007,
+    high: 1.500000008,
+  };
+  return prices;
 }
 
 async function isPending(transactionHash) {
@@ -569,7 +547,7 @@ async function getPoolInfo(in_token_address, out_token_address, level) {
 
     var token0_address = await pool_contract.methods.token0().call();
 
-    if (token0_address === WETH_TOKEN_ADDRESS) {
+    if (token0_address === PULSEX_WPLS_ADDRESS) {
       var forward = true;
       var eth_balance = reserves[0];
       var token_balance = reserves[1];
@@ -614,7 +592,7 @@ async function getETHInfo() {
     var symbol = "WETH";
 
     return {
-      address: WETH_TOKEN_ADDRESS,
+      address: PULSEX_WPLS_ADDRESS,
       balance: balance,
       symbol: symbol,
       decimals: decimals,
@@ -649,9 +627,6 @@ async function getTokenInfo(tokenAddr, token_abi_ask) {
 }
 
 async function preparedAttack() {
-  in_token_address = WETH_TOKEN_ADDRESS;
-  out_token_address = TOKEN_ADDRESS;
-  user_wallet = USER_WALLET;
   amount = AMOUNT;
   level = LEVEL;
 
@@ -661,7 +636,7 @@ async function preparedAttack() {
 
     var log_str = "***** Your Wallet Balance *****";
 
-    log_str = "wallet address:\t" + user_wallet.address;
+    log_str = "wallet address:\t" + USER_WALLET.address;
 
     if(!attack_started) console.log(log_str.green);
 
@@ -686,15 +661,13 @@ async function preparedAttack() {
       return false;
     }
 
-
     input_token_info = await getTokenInfo(
-      in_token_address,
+      PULSEX_WPLS_ADDRESS,
       INPUT_TOKEN_ABI_REQ
     );
 
-
     out_token_info = await getTokenInfo(
-      out_token_address,
+      TOKEN_ADDRESS,
       OUT_TOKEN_ABI_REQ
     );
 
@@ -817,7 +790,7 @@ function calc_profit_test(){
   return input_profit;
 }
 
-console.log("profit", calc_profit_test());
+// console.log("profit", calc_profit_test());
 
 main();
 
