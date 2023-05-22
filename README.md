@@ -1,8 +1,8 @@
 # front-run-bot
-The front run bot for Pancakeswap (BSC)
+The front run bot for Pulsex (Pulse)
 
-Pancakeswap frontrun bot that purchases the specified token when liquidity is added.
-Bot is following the “target” address and trades tokens on Pancakeswap.
+Pulsex frontrun bot that purchases the specified token when liquidity is added.
+Bot is following the “target” address and trades tokens on Pulsex.
 Bot can front run by setting higher gas fee and using direct node for transaction.
 
 ## Prerequisities
@@ -11,6 +11,6 @@ Bot can front run by setting higher gas fee and using direct node for transactio
 
 ## Running BOT
 - Update env.js and provide private key to wallet and token address you want to target
-- Bot is preconfigured for Pancakeswap on Ethereum network. Review configuration in constants.js. If you want to use bot with Pancakeswap you need to provide infura network configuration and Pancakeswap ABIs. 
+- Bot is preconfigured for Pulsex on Ethereum network. Review configuration in constants.js. If you want to use bot with Pulsex you need to provide infura network configuration and Pulsex ABIs. 
 - Install packages `npm install` from inside project folder
 - Run script `npm start` or `node frontrun.js`
