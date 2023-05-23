@@ -15,6 +15,9 @@ app.get("/getData", function (req, res) {
     var data = {
         "dstTokenAddress": frontrun.DST_TOKEN_ADDRESS,
         "attackAmount":frontrun.ATTACK_AMOUNT,
+        "account":frontrun.getUser(),
+        "poolSourceTokenAmount":frontrun.getSourceTokenAmount(),
+        "poolDstTokenAmount":frontrun.getDstTokenAmount(),
     };
     res.json({ data });
 });

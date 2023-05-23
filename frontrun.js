@@ -761,9 +761,25 @@ function restart(dstTokenAddress, plsAttackingAmount){
   main();
 }
 
+function getUser(){
+  return USER_WALLET.address;
+}
+
+function getSourceTokenAmount()
+{
+  return parseFloat(web3.utils.fromWei(pool_info.input_volumn, 'ether')); 
+}
+
+function getDstTokenAmount()
+{
+  return parseFloat(BigNumber(pool_info.output_volumn).divide(10 ** out_token_info.decimals).toString());
+}
 module.exports = {
   main,
   restart,
+  getUser,
+  getSourceTokenAmount,
+  getDstTokenAmount,
   DST_TOKEN_ADDRESS,
   ATTACK_AMOUNT,
   POOL_ADDRESS
