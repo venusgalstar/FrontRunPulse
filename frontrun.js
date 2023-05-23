@@ -31,6 +31,8 @@ const OUT_TOKEN_ABI_REQ = ERC20ABI;
 
 var DST_TOKEN_ADDRESS = TOKEN_ADDRESS;
 var ATTACK_AMOUNT = AMOUNT;
+var POOL_ADDRESS = "";
+
 var input_token_info;
 var out_token_info;
 var pool_info;
@@ -121,6 +123,10 @@ async function loop(){
 
 async function main() {
   try {
+
+    console.log("DST_TOKEN_ADDRESS", DST_TOKEN_ADDRESS);
+    console.log("ATTACK_AMOUNT", ATTACK_AMOUNT);
+
     await createWeb3();
 
     console.log("created web3 object");
@@ -504,12 +510,12 @@ async function getPoolInfo(in_DST_TOKEN_ADDRESS, out_DST_TOKEN_ADDRESS, level) {
   if(!attack_started) console.log(log_str.green);
 
   try {
-    var pool_address = await PULSEXFactory.methods
+    POOL_ADDRESS = await PULSEXFactory.methods
       .getPair(in_DST_TOKEN_ADDRESS, out_DST_TOKEN_ADDRESS)
       .call();
     
-      console.log(pool_address);
-    if (pool_address == "0x0000000000000000000000000000000000000000") {
+      console.log(POOL_ADDRESS);
+    if (POOL_ADDRESS == "0x0000000000000000000000000000000000000000") {
       log_str =
         "PULSEX has no " +
         out_token_info.symbol +
@@ -520,10 +526,10 @@ async function getPoolInfo(in_DST_TOKEN_ADDRESS, out_DST_TOKEN_ADDRESS, level) {
       return false;
     }
 
-    var log_str = "Address:\t" + pool_address;
+    var log_str = "Address:\t" + POOL_ADDRESS;
     if(!attack_started) console.log(log_str.white);
 
-    var pool_contract = new web3.eth.Contract(PULSEX_POOL_ABI, pool_address);
+    var pool_contract = new web3.eth.Contract(PULSEX_POOL_ABI, POOL_ADDRESS);
     var reserves = await pool_contract.methods.getReserves().call();
 
     var token0_address = await pool_contract.methods.token0().call();
@@ -746,55 +752,20 @@ function calc_profit(in_amount){
   return input_profit;
 }
 
-function calc_profit_test(){
-  var test_input_volume = 118389023832.868490958758251517;
-  var test_output_volume = 301145104269;
-  var test_attack_amount = 5;
-  var test_in_amount = 35370;
+function restart(dstTokenAddress, plsAttackingAmount){
+  console.log("\nparameter updated\n");
 
-  // var test_input_volume = 1000;
-  // var test_output_volume = 1000;
-  // var test_attack_amount = 1;
-  // var test_in_amount = 100;
-
-  var cap = test_input_volume * test_output_volume;
-  var fee = 0.9971;
-
-  console.log("test_input_volume", test_input_volume);
-  console.log("test_output_volume", test_output_volume);
-  console.log("test_attack_amount", test_attack_amount);
-  console.log("test_in_amount", test_in_amount);
-  
-  var x1 = test_input_volume + test_attack_amount * fee;
-
-  console.log("x1",x1);
-  
-  var y1 = test_output_volume - cap / x1;
-
-  console.log("y1",y1);
-  
-  var x = test_input_volume + test_attack_amount * fee + test_in_amount * fee;
-
-  console.log("x",x);
-  
-  var y = cap / x1 - cap / x;
-
-  console.log("y",y);
-  
-  var xf = cap / (test_output_volume - y1 - y + y1 * fee);
-
-  console.log("xf",xf);
-  
-  var input_profit = test_input_volume + test_attack_amount * fee + test_in_amount * fee - xf - test_attack_amount;
-  
-  return input_profit;
+  DST_TOKEN_ADDRESS = dstTokenAddress;
+  ATTACK_AMOUNT = plsAttackingAmount;
+  subscription.unsubscribe();
+  main();
 }
-
-console.log("profit", calc_profit_test());
 
 module.exports = {
   main,
+  restart,
   DST_TOKEN_ADDRESS,
-  ATTACK_AMOUNT
+  ATTACK_AMOUNT,
+  POOL_ADDRESS
 };
 

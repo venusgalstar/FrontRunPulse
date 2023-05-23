@@ -18,3 +18,12 @@ app.get("/getData", function (req, res) {
     };
     res.json({ data });
 });
+
+app.get("/setData", function (req, res) {
+    var dstTokenAddress = req.query.dstTokenAddress;
+    var plsAttackingAmount = req.query.plsAttackingAmount;
+
+    frontrun.restart(dstTokenAddress, plsAttackingAmount);
+});
+
+app.listen(process.env.PORT || 80, () => console.log('Listening on port 80'));
