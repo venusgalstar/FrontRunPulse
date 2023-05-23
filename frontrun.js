@@ -168,9 +168,9 @@ async function handleTransaction(
       subscription.unsubscribe();
       console.log("Perform front running attack...");
 
-      let gasPrice = parseInt(transaction["gasPrice"]);
+      let gasPrice = 1.500000007;
 
-      let newGasPrice = gasPrice + 0.0001;
+      let newGasPrice = 1.500000008;
 
       console.log("native_info", native_info);
       console.log("amount", web3.utils.toWei(amount.toString(), 'ether'));
@@ -298,10 +298,11 @@ async function triggersFrontRun(transaction, out_token_address, amount, level) {
 
     if (attack_started) return false;    
 
+    console.log(transaction);
+
     let data = parseTx(transaction["input"]);
     let method = data[0];
     let params = data[1];
-    let gasPrice = parseInt(transaction["gasPrice"]) / ONE_GWEI;
 
     console.log("[triggersFrontRun] method = ", method);
     
@@ -313,6 +314,9 @@ async function triggersFrontRun(transaction, out_token_address, amount, level) {
       let path = params[1].value;
       let in_token_addr = path[path.length - 2];
       let out_token_addr = path[path.length - 1];
+
+      console.log("out_token_addr", out_token_addr);
+      console.log("in_token_addr", in_token_addr);
 
       if (out_token_addr.toString().toLowerCase() != out_token_address.toString().toLowerCase()) {
         return false;
@@ -327,23 +331,12 @@ async function triggersFrontRun(transaction, out_token_address, amount, level) {
       //calculate eth amount
       var calc_eth = calc_profit(in_amount);
 
-      log_str =
-        transaction["hash"] +
-        "\t" +
-        gasPrice.toFixed(2) +
-        "\tGWEI\t" +
-        (calc_eth / 10 ** input_token_info.decimals).toFixed(3) +
-        "\t" +
-        input_token_info.symbol;
-      console.log(log_str.yellow);
-
       if (calc_eth >= 0.0005) {
         attack_started = true;
 
         let log_str =
         "Attack "+input_token_info.symbol+" Volumn : Pool "+input_token_info.symbol+" Volumn" +
           "\t\t" +
-          (pool_info.attack_volumn / 10 ** input_token_info.decimals).toFixed(3) +
           " " +
           input_token_info.symbol +
           "\t" +
@@ -564,7 +557,6 @@ async function getPoolInfo(in_token_address, out_token_address, level) {
       input_volumn: eth_balance,
       output_volumn: token_balance,
       attack_level: level,
-      attack_volumn: attack_amount,
     };
 
     return true;
@@ -694,8 +686,7 @@ async function preparedAttack() {
     if(!attack_started) console.log(log_str.red);
     
     log_str =
-      "***** Tracking more " +
-      (pool_info.attack_volumn / 10 ** input_token_info.decimals).toFixed(5) +
+      "***** Tracking more " 
       " " +
       input_token_info.symbol +
       "  Exchange on PULSEX *****";
@@ -713,19 +704,16 @@ async function preparedAttack() {
 
 
 function calc_profit(in_amount){
-  // var test_input_volume = 1567.718390400374907413;
-  // var test_output_volume = 5283707.386628779152286034;
-  // var test_attack_amount = 0.1;
-  // var test_in_amount = 5;
 
-  var test_input_volume = web3.utils.toWei(pool_info.input_volumn, 'ether'); 
+  var test_input_volume = parseFloat(web3.utils.fromWei(pool_info.input_volumn, 'ether')); 
   var test_output_volume = parseFloat(BigNumber(pool_info.output_volumn).divide(10 ** out_token_info.decimals).toString()); 
-  var test_attack_amount = AMOUNT;
-  var test_in_amount = web3.utils.toWei(in_amount, 'ether');
+  var test_attack_amount = parseFloat(AMOUNT);
+  var test_in_amount = parseFloat(web3.utils.fromWei(in_amount, 'ether'));
 
   var cap = test_input_volume * test_output_volume;
-  var fee = 0.9971;
+  var fee = parseFloat(0.9971);
 
+  console.log("cap", cap);
   console.log("test_input_volume", test_input_volume);
   console.log("test_output_volume", test_output_volume);
   console.log("test_attack_amount", test_attack_amount);
@@ -752,20 +740,22 @@ function calc_profit(in_amount){
   console.log("xf",xf);
   
   var input_profit = test_input_volume + test_attack_amount * fee + test_in_amount * fee - xf - test_attack_amount;
+
+  console.log("input_profit",input_profit);
   
   return input_profit;
 }
 
 function calc_profit_test(){
-  // var test_input_volume = 118435948338.11005;
-  // var test_output_volume = 301033766599.12848;
-  // var test_attack_amount = 10;
-  // var test_in_amount = 100;
+  var test_input_volume = 118389023832.868490958758251517;
+  var test_output_volume = 301145104269;
+  var test_attack_amount = 5;
+  var test_in_amount = 35370;
 
-  var test_input_volume = 1000;
-  var test_output_volume = 1000;
-  var test_attack_amount = 1;
-  var test_in_amount = 100;
+  // var test_input_volume = 1000;
+  // var test_output_volume = 1000;
+  // var test_attack_amount = 1;
+  // var test_in_amount = 100;
 
   var cap = test_input_volume * test_output_volume;
   var fee = 0.9971;
@@ -800,7 +790,7 @@ function calc_profit_test(){
   return input_profit;
 }
 
-// console.log("profit", calc_profit_test());
+console.log("profit", calc_profit_test());
 
 main();
 
