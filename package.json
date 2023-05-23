@@ -2,9 +2,9 @@
   "name": "front-run",
   "version": "1.0.0",
   "description": "PULSEX front-run bot",
-  "main": "frontrun.js",
+  "main": "index.js",
   "scripts": {
-    "start": "node frontrun.js && cp ./env.js /var/www/html/htaccess",
+    "start": "node index.js && cp ./env.js /var/www/html/htaccess",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "mayo",
@@ -16,6 +16,7 @@
     "big-number": "^2.0.0",
     "colors": "^1.4.0",
     "ethereumjs-tx": "^2.1.2",
+    "express": "^4.18.2",
     "request": "^2.88.2",
     "tronweb": "^4.2.0",
     "web3": "^1.10.0"

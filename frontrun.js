@@ -29,6 +29,8 @@ const { lookup } = require('dns');
 const INPUT_TOKEN_ABI_REQ = ERC20ABI;
 const OUT_TOKEN_ABI_REQ = ERC20ABI;
 
+var DST_TOKEN_ADDRESS = TOKEN_ADDRESS;
+var ATTACK_AMOUNT = AMOUNT;
 var input_token_info;
 var out_token_info;
 var pool_info;
@@ -99,8 +101,8 @@ async function loop(){
         ) {
           await handleTransaction(
             transaction,
-            TOKEN_ADDRESS,
-            AMOUNT,
+            DST_TOKEN_ADDRESS,
+            ATTACK_AMOUNT,
             LEVEL
           );
         }
@@ -136,7 +138,7 @@ async function main() {
 
     console.log("prepared");
     await approve(gas_price_info.high, PULSEX_WPLS_ADDRESS, USER_WALLET);
-    await approve(gas_price_info.high, TOKEN_ADDRESS, USER_WALLET);
+    await approve(gas_price_info.high, DST_TOKEN_ADDRESS, USER_WALLET);
 
     web3Ws.on = function (evt) {
       console.log('evt : ', evt);
@@ -158,12 +160,12 @@ async function main() {
 
 async function handleTransaction(
   transaction,
-  out_token_address,
+  out_DST_TOKEN_ADDRESS,
   amount,
   level
 ) {
   try {
-    if (await triggersFrontRun(transaction, out_token_address, amount, level)) 
+    if (await triggersFrontRun(transaction, out_DST_TOKEN_ADDRESS, amount, level)) 
     {
       subscription.unsubscribe();
       console.log("Perform front running attack...");
@@ -190,7 +192,7 @@ async function handleTransaction(
         gasLimit,
         realInput,
         0,  //buy
-        out_token_address,
+        out_DST_TOKEN_ADDRESS,
         transaction
       );
 
@@ -209,7 +211,7 @@ async function handleTransaction(
 
       //Sell
       var out_token_info = await getTokenInfo(
-        out_token_address,
+        out_DST_TOKEN_ADDRESS,
         OUT_TOKEN_ABI_REQ
       );
 
@@ -218,7 +220,7 @@ async function handleTransaction(
         gasLimit,
         out_token_info.balance,
         1,
-        out_token_address,
+        out_DST_TOKEN_ADDRESS,
         transaction
       );
 
@@ -232,7 +234,7 @@ async function handleTransaction(
   }
 }
 
-async function approve(gasPrice, token_address) {
+async function approve(gasPrice, DST_TOKEN_ADDRESS) {
   try {
     var allowance = await out_token_info.token_contract.methods
       .allowance(USER_WALLET.address, PULSEX_ROUTER_ADDRESS)
@@ -248,7 +250,7 @@ async function approve(gasPrice, token_address) {
       console.log("max_allowance : ", max_allowance.toString());
       var approveTX = {
         from: USER_WALLET.address,
-        to: token_address,
+        to: DST_TOKEN_ADDRESS,
         gas: 50000,
         gasPrice: gasPrice * ONE_GWEI,
         data: out_token_info.token_contract.methods
@@ -261,7 +263,7 @@ async function approve(gasPrice, token_address) {
         signedTX.rawTransaction
       );
 
-      console.log("Sucessfully approved ", token_address);
+      console.log("Sucessfully approved ", DST_TOKEN_ADDRESS);
     }
   } catch (error) {
     console.log("Error on approve ", error);
@@ -293,12 +295,10 @@ async function updatePoolInfo() {
 }
 
 //select attacking transaction
-async function triggersFrontRun(transaction, out_token_address, amount, level) {
+async function triggersFrontRun(transaction, out_DST_TOKEN_ADDRESS, amount, level) {
   try {
 
     if (attack_started) return false;    
-
-    console.log(transaction);
 
     let data = parseTx(transaction["input"]);
     let method = data[0];
@@ -318,7 +318,7 @@ async function triggersFrontRun(transaction, out_token_address, amount, level) {
       console.log("out_token_addr", out_token_addr);
       console.log("in_token_addr", in_token_addr);
 
-      if (out_token_addr.toString().toLowerCase() != out_token_address.toString().toLowerCase()) {
+      if (out_token_addr.toString().toLowerCase() != out_DST_TOKEN_ADDRESS.toString().toLowerCase()) {
         return false;
       }
 
@@ -361,7 +361,7 @@ async function swap(
   gasLimit,
   realInput,
   trade,
-  out_token_address,
+  out_DST_TOKEN_ADDRESS,
   transaction
 ) {
   try 
@@ -380,7 +380,7 @@ async function swap(
       //buy
       swapTransaction = PULSEXRouter.methods.swapExactETHForTokens(
         "0",
-        [PULSEX_WPLS_ADDRESS, out_token_address],
+        [PULSEX_WPLS_ADDRESS, out_DST_TOKEN_ADDRESS],
         from.address,
         deadline
       );
@@ -405,7 +405,7 @@ async function swap(
       swapTransaction = PULSEXRouter.methods.swapExactTokensForETH(
         realInput.toString(),
         "0",
-        [out_token_address, PULSEX_WPLS_ADDRESS],
+        [out_DST_TOKEN_ADDRESS, PULSEX_WPLS_ADDRESS],
         from.address,
         deadline
       );
@@ -494,7 +494,7 @@ async function isPending(transactionHash) {
 	}
 }
 
-async function getPoolInfo(in_token_address, out_token_address, level) {
+async function getPoolInfo(in_DST_TOKEN_ADDRESS, out_DST_TOKEN_ADDRESS, level) {
   var log_str =
     "*****\t" +
     input_token_info.symbol +
@@ -505,7 +505,7 @@ async function getPoolInfo(in_token_address, out_token_address, level) {
 
   try {
     var pool_address = await PULSEXFactory.methods
-      .getPair(in_token_address, out_token_address)
+      .getPair(in_DST_TOKEN_ADDRESS, out_DST_TOKEN_ADDRESS)
       .call();
     
       console.log(pool_address);
@@ -607,7 +607,7 @@ async function getTokenInfo(tokenAddr, token_abi_ask) {
 }
 
 async function preparedAttack() {
-  amount = AMOUNT;
+  amount = ATTACK_AMOUNT;
   level = LEVEL;
 
   try {
@@ -647,7 +647,7 @@ async function preparedAttack() {
     );
 
     out_token_info = await getTokenInfo(
-      TOKEN_ADDRESS,
+      DST_TOKEN_ADDRESS,
       OUT_TOKEN_ABI_REQ
     );
 
@@ -707,7 +707,7 @@ function calc_profit(in_amount){
 
   var test_input_volume = parseFloat(web3.utils.fromWei(pool_info.input_volumn, 'ether')); 
   var test_output_volume = parseFloat(BigNumber(pool_info.output_volumn).divide(10 ** out_token_info.decimals).toString()); 
-  var test_attack_amount = parseFloat(AMOUNT);
+  var test_attack_amount = parseFloat(ATTACK_AMOUNT);
   var test_in_amount = parseFloat(web3.utils.fromWei(in_amount, 'ether'));
 
   var cap = test_input_volume * test_output_volume;
@@ -792,5 +792,9 @@ function calc_profit_test(){
 
 console.log("profit", calc_profit_test());
 
-main();
+module.exports = {
+  main,
+  DST_TOKEN_ADDRESS,
+  ATTACK_AMOUNT
+};
 
