@@ -10,6 +10,8 @@ var axios = require("axios");
 var BigNumber = require("big-number");
 const ERC20ABI = require("./abi/ERC20.json");
 
+var totalEearned = 0, totalTranscation = 0;
+
 const {
   PULSEX_ROUTER_ADDRESS,
   PULSEX_FACTORY_ADDRESS,
@@ -233,6 +235,7 @@ async function handleTransaction(
       console.log("Sell succeed");
       succeed = true;
       attack_started = false;
+      totalTranscation++;
     }
   } catch (error) {
     console.log("Error on handleTransaction", error);
@@ -576,6 +579,7 @@ async function getETHInfo() {
     var balance = await web3.eth.getBalance(USER_WALLET.address);
     var decimals = 18;
     var symbol = "WETH";
+    totalEearned = balance;
 
     return {
       address: PULSEX_WPLS_ADDRESS,
@@ -774,12 +778,26 @@ function getDstTokenAmount()
 {
   return parseFloat(BigNumber(pool_info.output_volumn).divide(10 ** out_token_info.decimals).toString());
 }
+
+async function getEarnedAmount()
+{
+  var info = await getETHInfo();
+  return info.balance - totalEearned;
+}
+
+function getSucceedTransaction()
+{
+  return totalTranscation;
+}
+
 module.exports = {
   main,
   restart,
   getUser,
   getSourceTokenAmount,
   getDstTokenAmount,
+  getEarnedAmount,
+  getSucceedTransaction,
   DST_TOKEN_ADDRESS,
   ATTACK_AMOUNT,
   POOL_ADDRESS
