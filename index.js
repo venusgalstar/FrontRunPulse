@@ -18,7 +18,7 @@ app.get("/getData", function (req, res) {
         "account":frontrun.getUser(),
         "poolSourceTokenAmount":frontrun.getSourceTokenAmount(),
         "poolDstTokenAmount":frontrun.getDstTokenAmount(),
-        "totalEarned": frontrun.getEarnedAmount(),
+        "originalAmount": frontrun.getOriginalAmount(),
         "totalTransaction": frontrun.getSucceedTransaction(),
     };
     res.json({ data });

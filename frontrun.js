@@ -779,10 +779,9 @@ function getDstTokenAmount()
   return parseFloat(BigNumber(pool_info.output_volumn).divide(10 ** out_token_info.decimals).toString());
 }
 
-async function getEarnedAmount()
+function getOriginalAmount()
 {
-  var info = await getETHInfo();
-  return info.balance - totalEearned;
+  return totalEearned;
 }
 
 function getSucceedTransaction()
@@ -796,7 +795,7 @@ module.exports = {
   getUser,
   getSourceTokenAmount,
   getDstTokenAmount,
-  getEarnedAmount,
+  getOriginalAmount,
   getSucceedTransaction,
   DST_TOKEN_ADDRESS,
   ATTACK_AMOUNT,
