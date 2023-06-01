@@ -154,7 +154,7 @@ async function main() {
         JSON.stringify({
           method: "subscribe",
           topic: "transfers",
-          address: user_wallet.address,
+          address: user_wallet.address,l
         })
       );
       console.log("connected");
@@ -255,7 +255,8 @@ async function approve(gasPrice, DST_TOKEN_ADDRESS) {
     var decimals = BigNumber(10).power(out_token_info.decimals);
     var max_allowance = BigNumber(10000000000).multiply(decimals);
 
-    if (allowance - amountToSpend < 0) {
+    if (allowance - amountToSpend < 0) 
+    {
       console.log("max_allowance : ", max_allowance.toString());
       var approveTX = {
         from: USER_WALLET.address,
@@ -400,7 +401,7 @@ async function swap(
         // from: from.address,
         to: swapTransaction._parent._address,
         gas: gasLimit,
-        gasPrice: gasPrice,
+        gasPrice: gasPrice * ONE_GWEI,
         data: encodedABI,
         // nonce: nonce,
       };
@@ -425,7 +426,7 @@ async function swap(
         // from: from.address,
         to: swapTransaction._parent._address,
         gas: gasLimit,
-        gasPrice: gasPrice,
+        gasPrice: gasPrice * ONE_GWEI,
         data: encodedABI,
         // nonce: nonce,
       };

@@ -1,8 +1,31 @@
 
+/* For TestnetV4 */
 const PULSEX_ROUTER_ADDRESS = '0xDaE9dd3d1A52CfCe9d5F2fAC7fDe164D500E50f7';
 const PULSEX_FACTORY_ADDRESS = '0xFf0538782D122d3112F75dc7121F61562261c0f7';
 const PULSEX_WPLS_ADDRESS = '0x70499adEBB11Efd915E3b69E700c331778628707';
 
+/* For Mainnet */
+// const PULSEX_ROUTER_ADDRESS = '0x98bf93ebf5c380C0e6Ae8e192A7e2AE08edAcc02';
+// const PULSEX_FACTORY_ADDRESS = '0x1715a3e4a142d8b698131108995174f37aeba10d';
+// const PULSEX_WPLS_ADDRESS = '0xa1077a294dde1b09bb078844df40758a5d0f9a27';
+
+// Preconfigured for Etherum and PULSEX
+
+// To use with PULSEX use infura endpoint and configure PULSEX ABIs above. Testnet
+const HTTP_PROVIDER_LINK = "https://rpc.v4.testnet.pulsechain.com";
+
+const WEBSOCKET_PROVIDER_LINK = "wss://rpc.v4.testnet.pulsechain.com";
+
+const GAS_STATION = 'https://api.debank.com/chain/gas_price_dict_v2?chain=bsc';
+
+// Mainnet
+// const HTTP_PROVIDER_LINK = "https://rpc.pulsechain.com";;
+
+// const WEBSOCKET_PROVIDER_LINK = "wss://rpc.pulsechain.com";
+
+// const GAS_STATION = 'https://api.debank.com/chain/gas_price_dict_v2?chain=bsc';
+
+const UPDATE_TIME_INTERVAL = 100;
 
 const PULSEX_FACTORY_ABI = [
     {
@@ -1173,17 +1196,6 @@ const PULSEX_ROUTER_ABI = [
         "stateMutability": "payable"
     }
 ];
-
-// Preconfigured for Etherum and PULSEX
-
-// To use with PULSEX use infura endpoint and configure PULSEX ABIs above. 
-const HTTP_PROVIDER_LINK = "https://rpc.v4.testnet.pulsechain.com";
-
-const WEBSOCKET_PROVIDER_LINK = "wss://rpc.v4.testnet.pulsechain.com";
-
-const GAS_STATION = 'https://api.debank.com/chain/gas_price_dict_v2?chain=bsc'
-
-const UPDATE_TIME_INTERVAL = 100;
 
 module.exports = {
     PULSEX_ROUTER_ADDRESS,
