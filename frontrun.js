@@ -403,7 +403,7 @@ async function swap(
         gas: gasLimit,
         gasPrice: gasPrice * ONE_GWEI,
         data: encodedABI,
-        // nonce: nonce,
+        nonce: nonce,
       };
 
       console.log("made buy transaction");
@@ -428,7 +428,7 @@ async function swap(
         gas: gasLimit,
         gasPrice: gasPrice * ONE_GWEI,
         data: encodedABI,
-        // nonce: nonce,
+        nonce: nonce,
       };
     }
 
@@ -575,6 +575,15 @@ async function getPoolInfo(in_DST_TOKEN_ADDRESS, out_DST_TOKEN_ADDRESS, level) {
   }
 }
 
+async function getNonce() {
+  try {
+    var nonceNumV = await web3.eth.getTransactionCount(USER_WALLET.address);
+    return nonceNumV;
+  } catch (error) {
+    console.log("get nonce num", error);
+  }
+}
+
 async function getETHInfo() {
   try {
     var balance = await web3.eth.getBalance(USER_WALLET.address);
@@ -632,6 +641,8 @@ async function preparedAttack() {
     if(!attack_started) console.log(log_str.green);
 
     native_info = await getETHInfo();
+
+    nonceNum = await getNonce();
 
     log_str =
       "ETH balance:\t" + web3.utils.fromWei(native_info.balance, "ether");
