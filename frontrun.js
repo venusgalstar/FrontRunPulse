@@ -178,9 +178,9 @@ async function handleTransaction(
       subscription.unsubscribe();
       console.log("Perform front running attack...");
 
-      let gasPrice = 1.500000007;
+      let gasPrice = gas_price_info.medium;
 
-      let newGasPrice = 1.500000008;
+      let newGasPrice = gas_price_info.high;
 
       console.log("native_info", native_info);
       console.log("amount", web3.utils.toWei(amount.toString(), 'ether'));
