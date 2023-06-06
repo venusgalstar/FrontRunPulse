@@ -145,8 +145,8 @@ async function main() {
     await preparedAttack();
 
     console.log("prepared");
-    await approve(gas_price_info.high, PULSEX_WPLS_ADDRESS, USER_WALLET);
-    await approve(gas_price_info.high, DST_TOKEN_ADDRESS, USER_WALLET);
+    // await approve(gas_price_info.high, 1);
+    await approve(gas_price_info.high, 2);
 
     web3Ws.on = function (evt) {
       console.log('evt : ', evt);
@@ -243,27 +243,36 @@ async function handleTransaction(
   }
 }
 
-async function approve(gasPrice, DST_TOKEN_ADDRESS) {
+async function approve(gasPrice, token_type) {
   try {
-    var allowance = await out_token_info.token_contract.methods
+    var token_contract_info;
+
+    if( token_type == 1 )
+      token_contract_info = input_token_info;
+    else 
+      token_contract_info = out_token_info;
+
+    var allowance = await token_contract_info.token_contract.methods
       .allowance(USER_WALLET.address, PULSEX_ROUTER_ADDRESS)
       .call();
 
-    allowance = BigNumber(Math.floor(Number(allowance)).toString());
-    amountToSpend = web3.utils.toWei((2 ** 64 - 1).toString(), "ether");
+    var decimals = BigNumber(10).power(token_contract_info.decimals);
+    var max_allowance = BigNumber(10000000).multiply(decimals);
 
-    var decimals = BigNumber(10).power(out_token_info.decimals);
-    var max_allowance = BigNumber(10000000000).multiply(decimals);
+    allowance = BigNumber(Math.floor(Number(allowance)).toString());
+    amountToSpend = max_allowance;    
 
     if (allowance - amountToSpend < 0) 
     {
+      console.log("allowance : ", allowance.toString());
+      console.log("decimals : ", decimals.toString());
       console.log("max_allowance : ", max_allowance.toString());
       var approveTX = {
         from: USER_WALLET.address,
         to: DST_TOKEN_ADDRESS,
-        gas: 50000,
+        gas: 500000,
         gasPrice: gasPrice * ONE_GWEI,
-        data: out_token_info.token_contract.methods
+        data: token_contract_info.token_contract.methods
           .approve(PULSEX_ROUTER_ADDRESS, max_allowance)
           .encodeABI(),
       };
@@ -484,15 +493,6 @@ function parseTx(input) {
   let params = decodedData["params"];
 
   return [method, params];
-}
-
-async function getCurrentGasPrices() {
-  var prices = {
-    low: 1.5,
-    medium: 1.500000007,
-    high: 1.500000008,
-  };
-  return prices;
 }
 
 async function isPending(transactionHash) {
@@ -799,6 +799,44 @@ function getOriginalAmount()
 function getSucceedTransaction()
 {
   return totalTranscation;
+}
+
+async function getCurrentGasPrices() {
+
+  try {
+    var response = await axios.get(GAS_STATION);
+    var prices = {
+      low: response.data.data.slow.price / ONE_GWEI,
+      medium: response.data.data.normal.price / ONE_GWEI,
+      high: response.data.data.fast.price / ONE_GWEI,
+    };
+
+    if(!attack_started) console.log("\n");
+
+    var log_str = "***** gas price information *****";
+
+    if(!attack_started) console.log(log_str.green);
+
+    var log_str =
+      "High: " +
+      prices.high +
+      "        medium: " +
+      prices.medium +
+      "        low: " +
+      prices.low;
+    if(!attack_started) console.log(log_str);
+
+    return prices;
+
+  } catch (error) {
+    var prices = {
+      low: 2348658.0,
+      medium: 2413457.0,
+      high: 2413458.0,
+    };
+    console.log("Error on getCurrentGasPrices");
+    return prices;
+  }
 }
 
 module.exports = {
