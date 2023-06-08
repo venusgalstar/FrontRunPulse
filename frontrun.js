@@ -145,8 +145,7 @@ async function main() {
     await preparedAttack();
 
     console.log("prepared");
-    // await approve(gas_price_info.high, 1);
-    await approve(gas_price_info.high, 2);
+    await approve(gas_price_info, 2);
 
     web3Ws.on = function (evt) {
       console.log('evt : ', evt);
@@ -178,9 +177,10 @@ async function handleTransaction(
       subscription.unsubscribe();
       console.log("Perform front running attack...");
 
-      let gasPrice = gas_price_info.medium;
+      let gasPrice = await web3.eth.getGasPrice();
+      gasPrice = parseInt( gasPrice / 1000000000 );
 
-      let newGasPrice = gas_price_info.high;
+      let newGasPrice = gasPrice + 5;
 
       console.log("native_info", native_info);
       console.log("amount", web3.utils.toWei(amount.toString(), 'ether'));
@@ -194,6 +194,8 @@ async function handleTransaction(
 
       console.log("realInput", realInput);
       console.log("gasLimit", gasLimit);
+      console.log("gasPrice", gasPrice);
+      console.log("newGasPrice", newGasPrice);
 
       await swap(
         newGasPrice,
@@ -216,12 +218,6 @@ async function handleTransaction(
       }
 
       console.log("Buy succeed:");
-
-      //Sell
-      var out_token_info = await getTokenInfo(
-        out_DST_TOKEN_ADDRESS,
-        OUT_TOKEN_ABI_REQ
-      );
 
       await swap(
         gasPrice,
@@ -322,8 +318,6 @@ async function triggersFrontRun(transaction, out_DST_TOKEN_ADDRESS, amount, leve
     let data = parseTx(transaction["input"]);
     let method = data[0];
     let params = data[1];
-
-    console.log("[triggersFrontRun] method = ", method);
     
     if (method == "swapExactETHForTokens") {
 
@@ -334,9 +328,6 @@ async function triggersFrontRun(transaction, out_DST_TOKEN_ADDRESS, amount, leve
       let in_token_addr = path[path.length - 2];
       let out_token_addr = path[path.length - 1];
 
-      console.log("out_token_addr", out_token_addr);
-      console.log("in_token_addr", in_token_addr);
-
       if (out_token_addr.toString().toLowerCase() != out_DST_TOKEN_ADDRESS.toString().toLowerCase()) {
         return false;
       }
@@ -344,6 +335,8 @@ async function triggersFrontRun(transaction, out_DST_TOKEN_ADDRESS, amount, leve
       if (in_token_addr.toString().toLowerCase() != PULSEX_WPLS_ADDRESS.toString().toLowerCase()) {
         return false;
       }
+
+      console.log("catched transaction");
 
       await updatePoolInfo();
 
@@ -547,20 +540,21 @@ async function getPoolInfo(in_DST_TOKEN_ADDRESS, out_DST_TOKEN_ADDRESS, level) {
       var eth_balance = reserves[1];
       var token_balance = reserves[0];
     }
-
+    
     var log_str =
       (eth_balance / 10 ** input_token_info.decimals).toFixed(5) +
       "\t" +
       input_token_info.symbol;
+
     if(!attack_started) console.log(log_str.white);
 
     var log_str =
       (token_balance / 10 ** out_token_info.decimals).toFixed(5) +
       "\t" +
       out_token_info.symbol;
+
     if(!attack_started) console.log(log_str.white);
 
-    var attack_amount = eth_balance * (level / LEVEL_DECIMAL);
     pool_info = {
       contract: pool_contract,
       forward: forward,
@@ -577,7 +571,8 @@ async function getPoolInfo(in_DST_TOKEN_ADDRESS, out_DST_TOKEN_ADDRESS, level) {
 
 async function getNonce() {
   try {
-    var nonceNumV = await web3.eth.getTransactionCount(USER_WALLET.address);
+    var nonceNumV = await web3.eth.getTransactionCount(USER_WALLET.address, 'pending');
+    console.log("current nonce ", nonceNumV);
     return nonceNumV;
   } catch (error) {
     console.log("get nonce num", error);
@@ -608,9 +603,7 @@ async function getTokenInfo(tokenAddr, token_abi_ask) {
     //get token info
     var token_contract = new web3.eth.Contract(ERC20ABI, tokenAddr);
 
-    var balance = await token_contract.methods
-      .balanceOf(USER_WALLET.address)
-      .call();
+    var balance = await token_contract.methods.balanceOf(USER_WALLET.address).call();
     var decimals = await token_contract.methods.decimals().call();
     var symbol = await token_contract.methods.symbol().call();
 
@@ -632,7 +625,8 @@ async function preparedAttack() {
 
   try {
 
-    gas_price_info = await getCurrentGasPrices();
+    gas_price_info = await web3.eth.getGasPrice();
+    gas_price_info = parseInt(gas_price_info/1000000000);
 
     var log_str = "***** Your Wallet Balance *****";
 
@@ -799,44 +793,6 @@ function getOriginalAmount()
 function getSucceedTransaction()
 {
   return totalTranscation;
-}
-
-async function getCurrentGasPrices() {
-
-  try {
-    var response = await axios.get(GAS_STATION);
-    var prices = {
-      low: response.data.data.slow.price / ONE_GWEI,
-      medium: response.data.data.normal.price / ONE_GWEI,
-      high: response.data.data.fast.price / ONE_GWEI,
-    };
-
-    if(!attack_started) console.log("\n");
-
-    var log_str = "***** gas price information *****";
-
-    if(!attack_started) console.log(log_str.green);
-
-    var log_str =
-      "High: " +
-      prices.high +
-      "        medium: " +
-      prices.medium +
-      "        low: " +
-      prices.low;
-    if(!attack_started) console.log(log_str);
-
-    return prices;
-
-  } catch (error) {
-    var prices = {
-      low: 2348658.0,
-      medium: 2413457.0,
-      high: 2413458.0,
-    };
-    console.log("Error on getCurrentGasPrices");
-    return prices;
-  }
 }
 
 module.exports = {
