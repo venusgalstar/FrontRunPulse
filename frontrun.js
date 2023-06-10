@@ -708,9 +708,9 @@ async function preparedAttack() {
       "  Exchange on PULSEX *****";
     if(!attack_started) console.log(log_str.green);
 
-    setTimeout(() => {
-      preparedAttack();
-    }, 150000);
+    // setTimeout(() => {
+    //   preparedAttack();
+    // }, 150000);
 
     return true;
   } catch (error) {
